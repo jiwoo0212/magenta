@@ -31,16 +31,17 @@ class Config(collections.namedtuple(
     ['model', 'hparams', 'note_sequence_augmenter', 'data_converter',
      'train_examples_path', 'eval_examples_path', 'tfds_name'])):
 
-  def values(self):
-    return self._asdict()
+    def values(self):
+        return self._asdict()
+
 
 Config.__new__.__defaults__ = (None,) * len(Config._fields)
 
 
 def update_config(config, update_dict):
-  config_dict = config.values()
-  config_dict.update(update_dict)
-  return Config(**config_dict)
+    config_dict = config.values()
+    config_dict.update(update_dict)
+    return Config(**config_dict)
 
 
 CONFIG_MAP = {}
@@ -64,7 +65,8 @@ CONFIG_MAP['cat-mel_2bar_small'] = Config(
             sampling_schedule='inverse_sigmoid',
             sampling_rate=1000,
         )),
-    note_sequence_augmenter=data.NoteSequenceAugmenter(transpose_range=(-5, 5)),
+    note_sequence_augmenter=data.NoteSequenceAugmenter(
+        transpose_range=(-5, 5)),
     data_converter=data.OneHotMelodyConverter(
         valid_programs=data.MEL_PROGRAMS,
         skip_polyphony=False,
@@ -92,7 +94,8 @@ CONFIG_MAP['cat-mel_2bar_big'] = Config(
             sampling_schedule='inverse_sigmoid',
             sampling_rate=1000,
         )),
-    note_sequence_augmenter=data.NoteSequenceAugmenter(transpose_range=(-5, 5)),
+    note_sequence_augmenter=data.NoteSequenceAugmenter(
+        transpose_range=(-5, 5)),
     data_converter=data.OneHotMelodyConverter(
         valid_programs=data.MEL_PROGRAMS,
         skip_polyphony=False,
@@ -116,7 +119,8 @@ CONFIG_MAP['cat-mel_2bar_med_chords'] = Config(
             enc_rnn_size=[1024],
             dec_rnn_size=[512, 512, 512],
         )),
-    note_sequence_augmenter=data.NoteSequenceAugmenter(transpose_range=(-3, 3)),
+    note_sequence_augmenter=data.NoteSequenceAugmenter(
+        transpose_range=(-3, 3)),
     data_converter=data.OneHotMelodyConverter(
         max_bars=100,
         slice_bars=2,
@@ -172,7 +176,35 @@ CONFIG_MAP['cat-drums_4bar_small'] = Config(
     note_sequence_augmenter=None,
     data_converter=data.DrumsConverter(
         max_bars=100,  # Truncate long drum sequences before slicing.
-        slice_bars=4, # 4 마디
+        slice_bars=4,  # 4 마디
+        steps_per_quarter=4,
+        roll_input=True),
+    train_examples_path=None,
+    eval_examples_path=None,
+)
+
+CONFIG_MAP['hierdec-drum_4bar'] = Config(
+    model=MusicVAE(
+        lstm_models.BidirectionalLstmEncoder(),
+        lstm_models.HierarchicalLstmDecoder(
+            lstm_models.CategoricalLstmDecoder(),
+            level_lengths=[8, 8],
+            disable_autoregression=True)),
+    hparams=merge_hparams(
+        lstm_models.get_default_hparams(),
+        HParams(
+            batch_size=64,
+            max_seq_len=64,  # 16*4
+            z_size=512,
+            enc_rnn_size=[2048, 2048],
+            dec_rnn_size=[1024, 1024],
+            free_bits=256,
+            max_beta=0.2,
+        )),
+    note_sequence_augmenter=None,
+    data_converter=data.DrumsConverter(
+        max_bars=100,  # Truncate long drum sequences before slicing.
+        slice_bars=4,  # 4 마디
         steps_per_quarter=4,
         roll_input=True),
     train_examples_path=None,
@@ -497,7 +529,8 @@ CONFIG_MAP['hier-multiperf_vel_1bar_big'] = Config(
 CONFIG_MAP['hier-multiperf_vel_1bar_med_chords'] = Config(
     model=MusicVAE(multiperf_encoder, multiperf_decoder),
     hparams=multiperf_hparams_med,
-    note_sequence_augmenter=data.NoteSequenceAugmenter(transpose_range=(-3, 3)),
+    note_sequence_augmenter=data.NoteSequenceAugmenter(
+        transpose_range=(-3, 3)),
     data_converter=data_hierarchical.MultiInstrumentPerformanceConverter(
         num_velocity_bins=8,
         hop_size_bars=1,
@@ -512,7 +545,8 @@ CONFIG_MAP['hier-multiperf_vel_1bar_med_chords'] = Config(
 CONFIG_MAP['hier-multiperf_vel_1bar_big_chords'] = Config(
     model=MusicVAE(multiperf_encoder, multiperf_decoder),
     hparams=multiperf_hparams_big,
-    note_sequence_augmenter=data.NoteSequenceAugmenter(transpose_range=(-3, 3)),
+    note_sequence_augmenter=data.NoteSequenceAugmenter(
+        transpose_range=(-3, 3)),
     data_converter=data_hierarchical.MultiInstrumentPerformanceConverter(
         num_velocity_bins=8,
         hop_size_bars=1,

@@ -11,4 +11,6 @@ build/
 .idea/
 __pycache__
 adata
-aresult
+1_tfoutput
+2_tfoutput_last
+3_train_result
